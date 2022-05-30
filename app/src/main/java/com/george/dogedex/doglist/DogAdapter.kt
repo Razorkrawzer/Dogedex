@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.george.dogedex.Dog
 import com.george.dogedex.databinding.DogListItemBinding
+import kotlinx.coroutines.NonDisposableHandle.parent
 
 class DogAdapter : ListAdapter<Dog, DogAdapter.DogViewHolder>(DiffCallback) {
 
@@ -18,6 +19,11 @@ class DogAdapter : ListAdapter<Dog, DogAdapter.DogViewHolder>(DiffCallback) {
         override fun areContentsTheSame(oldItem: Dog, newItem: Dog): Boolean {
             return oldItem.id == newItem.id
         }
+    }
+
+    private var onItemClickListener: ((Dog) -> Unit)? = null
+    fun setOnClickListener(onItemClickListener: (Dog) -> Unit){
+        this.onItemClickListener = onItemClickListener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DogViewHolder {
@@ -35,6 +41,9 @@ class DogAdapter : ListAdapter<Dog, DogAdapter.DogViewHolder>(DiffCallback) {
 
         fun bind(dog: Dog) {
             binding.dogName.text = dog.name
+            binding.dogName.setOnClickListener {
+                onItemClickListener?.invoke(dog)
+            }
         }
     }
 }
