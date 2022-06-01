@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.george.dogedex.Dog
 import com.george.dogedex.R
@@ -13,6 +14,8 @@ import com.george.dogedex.api.ApiResponseStatus
 import com.george.dogedex.databinding.ActivityDogListBinding
 import com.george.dogedex.dogdetail.DogDetailActivity
 import com.george.dogedex.dogdetail.DogDetailActivity.Companion.DOG_KEY
+
+private const val GRID_SPAN_COUNT = 3
 
 class DogListActivity : AppCompatActivity() {
 
@@ -26,7 +29,7 @@ class DogListActivity : AppCompatActivity() {
         val loadingWheel = binding.loadingWheel
 
         val recycler = binding.dogRecycler
-        recycler.layoutManager = LinearLayoutManager(this)
+        recycler.layoutManager = GridLayoutManager(this, GRID_SPAN_COUNT)
 
         val adapter = DogAdapter()
 
@@ -49,7 +52,7 @@ class DogListActivity : AppCompatActivity() {
                     loadingWheel.visibility = View.GONE
                     Toast.makeText(this, status.messageId, Toast.LENGTH_SHORT).show()
                 }
-                ApiResponseStatus.Loading -> loadingWheel.visibility = View.VISIBLE
+                is ApiResponseStatus.Loading -> loadingWheel.visibility = View.VISIBLE
                 is ApiResponseStatus.Success -> loadingWheel.visibility = View.GONE
             }
 
