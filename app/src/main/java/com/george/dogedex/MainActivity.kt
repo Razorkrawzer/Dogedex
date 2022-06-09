@@ -4,17 +4,28 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.george.dogedex.auth.LoginActivity
+import com.george.dogedex.databinding.ActivityMainBinding
+import com.george.dogedex.settings.SettingsActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         val user = User.getLoggedInUser(this)
         if (user == null) {
             openLoginActivity()
             return
         }
+
+        binding.settingsFab.setOnClickListener {
+            openSettingsActivity()
+        }
+    }
+
+    private fun openSettingsActivity() {
+        startActivity(Intent(this, SettingsActivity::class.java))
     }
 
     private fun openLoginActivity() {
