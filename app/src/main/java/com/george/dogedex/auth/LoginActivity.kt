@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.navigation.findNavController
 import com.george.dogedex.MainActivity
 import com.george.dogedex.R
+import com.george.dogedex.User
 import com.george.dogedex.api.ApiResponseStatus
 import com.george.dogedex.databinding.ActivityLoginBinding
 
@@ -37,6 +38,7 @@ class LoginActivity : AppCompatActivity(), LoginFragment.LoginFragmentActions,
 
         viewModel.user.observe(this){ user ->
             if (user != null){
+                User.setLoggedInUser(this, user)
                 startMainActivity()
             }
         }
@@ -44,6 +46,7 @@ class LoginActivity : AppCompatActivity(), LoginFragment.LoginFragmentActions,
 
     private fun startMainActivity() {
         startActivity(Intent(this, MainActivity::class.java))
+        finish()
     }
 
     private fun showErrorDialog(messageId: Int){
@@ -58,6 +61,10 @@ class LoginActivity : AppCompatActivity(), LoginFragment.LoginFragmentActions,
     override fun onRegisterButtonClick() {
         findNavController(R.id.nav_host_fragment)
             .navigate(LoginFragmentDirections.actionLoginFragmentToSignUpFragment())
+    }
+
+    override fun onLoginFieldsValidated(email: String, password: String) {
+        viewModel.login(email, password)
     }
 
     override fun onSignUpFieldsValidated(

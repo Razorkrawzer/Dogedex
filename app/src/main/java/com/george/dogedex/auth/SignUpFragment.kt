@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.george.dogedex.R
 import com.george.dogedex.databinding.FragmentSignUpBinding
+import com.george.dogedex.isValidEmail
 
 
 class SignUpFragment : Fragment() {
@@ -59,7 +60,7 @@ class SignUpFragment : Fragment() {
 
         val password = binding.passwordEdit.text.toString()
         if (password.isEmpty()){
-            binding.emailInput.error = getString(R.string.password_must_not_be_empty)
+            binding.passwordInput.error = getString(R.string.password_must_not_be_empty)
             return
         }
 
@@ -76,9 +77,6 @@ class SignUpFragment : Fragment() {
         signUpFragmentActions.onSignUpFieldsValidated(email, password, passwordConfirmation)
     }
 
-    private fun isValidEmail(email: String?): Boolean{
-        return !email.isNullOrEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
 
 
 }
