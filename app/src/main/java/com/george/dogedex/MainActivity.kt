@@ -3,8 +3,10 @@ package com.george.dogedex
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.george.dogedex.api.ApiServiceInterceptor
 import com.george.dogedex.auth.LoginActivity
 import com.george.dogedex.databinding.ActivityMainBinding
+import com.george.dogedex.doglist.DogListActivity
 import com.george.dogedex.settings.SettingsActivity
 
 class MainActivity : AppCompatActivity() {
@@ -17,11 +19,21 @@ class MainActivity : AppCompatActivity() {
         if (user == null) {
             openLoginActivity()
             return
+        }else{
+            ApiServiceInterceptor.setSessionToken(user.authenticationToken)
         }
 
         binding.settingsFab.setOnClickListener {
             openSettingsActivity()
         }
+
+        binding.dogListFab.setOnClickListener {
+            openDogListActivity()
+        }
+    }
+
+    private fun openDogListActivity() {
+        startActivity(Intent(this, DogListActivity::class.java))
     }
 
     private fun openSettingsActivity() {
