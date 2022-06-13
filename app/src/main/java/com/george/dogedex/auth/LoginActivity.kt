@@ -4,11 +4,10 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.findNavController
-import com.george.dogedex.MainActivity
+import com.george.dogedex.main.MainActivity
 import com.george.dogedex.R
 import com.george.dogedex.User
 import com.george.dogedex.api.ApiResponseStatus

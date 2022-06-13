@@ -10,8 +10,6 @@ import com.george.dogedex.api.makeNetworkCall
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import java.lang.Exception
-import java.net.UnknownHostException
 
 class DogRepository {
 
@@ -73,6 +71,18 @@ class DogRepository {
         val dogDTOList = dogListApiResponse.data.dogs
         val dogDTOMapper = DogDTOMapper()
         dogDTOMapper.fromDogDTOListToDogDomainList(dogDTOList)
+    }
+
+    suspend fun getDogByMlId(mlDogId: String): ApiResponseStatus<Dog> = makeNetworkCall {
+        val response = retrofitService.getDogByMlId(mlDogId)
+
+        if (!response.isSuccess) {
+            throw Exception(response.message)
+        }
+
+        val dogDTOMapper = DogDTOMapper()
+        dogDTOMapper.fromDogDTOToDogDomain(response.data.dog)
+
     }
 
 }

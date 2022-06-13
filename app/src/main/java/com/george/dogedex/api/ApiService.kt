@@ -7,6 +7,7 @@ import com.george.dogedex.api.dto.SignUpDTO
 import com.george.dogedex.api.responses.DogListApiResponse
 import com.george.dogedex.api.responses.AuthApiResponse
 import com.george.dogedex.api.responses.DefaultResponse
+import com.george.dogedex.api.responses.DogApiResponse
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -24,7 +25,7 @@ private val retrofit = Retrofit.Builder()
     .build()
 
 
-interface ApiService{
+interface ApiService {
     @GET(GET_ALL_DOGS)
     suspend fun getAllDogs(): DogListApiResponse
 
@@ -36,14 +37,17 @@ interface ApiService{
 
     @Headers("${ApiServiceInterceptor.NEEDS_AUTH_HEADER_KEY}: true")
     @POST(ADD_DOG_TO_USER_URL)
-    suspend fun addDogToUser(@Body addDogToUserDTO: AddDogToUserDTO) : DefaultResponse
+    suspend fun addDogToUser(@Body addDogToUserDTO: AddDogToUserDTO): DefaultResponse
 
     @Headers("${ApiServiceInterceptor.NEEDS_AUTH_HEADER_KEY}: true")
     @GET(GET_USER_DOGS_URL)
     suspend fun getUserDogs(): DogListApiResponse
+
+    @GET(GET_DOG_BY_ML_ID)
+    suspend fun getDogByMlId(@Query("ml_id") mlId: String): DogApiResponse
 }
 
-object DogsApi{
+object DogsApi {
     val retrofitService: ApiService by lazy {
         retrofit.create(ApiService::class.java)
     }
