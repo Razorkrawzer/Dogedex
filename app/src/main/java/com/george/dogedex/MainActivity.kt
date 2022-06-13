@@ -1,6 +1,7 @@
 package com.george.dogedex
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -10,15 +11,18 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import com.george.dogedex.WholeImageActivity.Companion.PHOTO_URI_KEY
 import com.george.dogedex.api.ApiServiceInterceptor
 import com.george.dogedex.auth.LoginActivity
 import com.george.dogedex.databinding.ActivityMainBinding
 import com.george.dogedex.doglist.DogListActivity
 import com.george.dogedex.settings.SettingsActivity
+import java.io.File
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()
         ) { isGranted: Boolean ->
             if (isGranted) {
-                startCamera()
+                setupCamera()
             } else {
                 Toast.makeText(this,
                     "You need to accept camera permission to use the camera",
@@ -35,6 +39,9 @@ class MainActivity : AppCompatActivity() {
         }
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var imageCapture: ImageCapture
+    private lateinit var cameraExecutor: ExecutorService
+    private var isCameraReady = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +64,33 @@ class MainActivity : AppCompatActivity() {
             openDogListActivity()
         }
 
+        binding.takePhotoFab.setOnClickListener {
+            if (isCameraReady) {
+                takePhoto()
+            }
+
+        }
+
         requestCameraPermission()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::cameraExecutor.isInitialized) {
+            cameraExecutor.shutdown()
+        }
+
+    }
+
+    private fun setupCamera() {
+        binding.cameraPreview.post {
+            imageCapture = ImageCapture.Builder()
+                .setTargetRotation(binding.cameraPreview.display.rotation)
+                .build()
+            cameraExecutor = Executors.newSingleThreadExecutor()
+            startCamera()
+            isCameraReady = true
+        }
     }
 
     private fun requestCameraPermission() {
@@ -67,7 +100,7 @@ class MainActivity : AppCompatActivity() {
                     this,
                     Manifest.permission.CAMERA
                 ) == PackageManager.PERMISSION_GRANTED -> {
-                    startCamera()
+                    setupCamera()
                 }
                 shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
                     AlertDialog.Builder(this)
@@ -88,8 +121,41 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } else {
-            startCamera()
+            setupCamera()
         }
+    }
+
+    private fun takePhoto() {
+        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(getOutputPhotoFile()).build()
+        imageCapture.takePicture(outputFileOptions, cameraExecutor,
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(error: ImageCaptureException) {
+                    Toast.makeText(this@MainActivity,
+                        "Error taking photo ${error.message}",
+                        Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    // insert your code here.
+                    val photoUri = outputFileResults.savedUri
+                    openWholeImageActivity(photoUri.toString())
+                }
+            })
+    }
+
+    private fun openWholeImageActivity(photoUri: String) {
+        val intent = Intent(this, WholeImageActivity::class.java)
+        intent.putExtra(PHOTO_URI_KEY, photoUri)
+        startActivity(intent)
+
+    }
+
+    private fun getOutputPhotoFile(): File {
+        val mediaDir = externalMediaDirs.firstOrNull()?.let {
+            File(it, resources.getString(R.string.app_name) + ".jpg").apply { mkdirs() }
+        }
+        return if (mediaDir != null && mediaDir.exists())
+            mediaDir else filesDir
     }
 
     private fun startCamera() {
@@ -105,9 +171,18 @@ class MainActivity : AppCompatActivity() {
             // Select back camera as default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
+            val imageAnalysis = ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+            imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+
+                imageProxy.close()
+            }
+
             // Bind use cases to camera
             cameraProvider.bindToLifecycle(
-                this, cameraSelector, preview
+                this, cameraSelector, preview, imageCapture, imageAnalysis
             )
 
         }, ContextCompat.getMainExecutor(this))
